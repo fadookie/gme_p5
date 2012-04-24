@@ -1,5 +1,3 @@
-package com.eliotlash.gme_p5;
-
 // Video game music player that runs emulator and plays through speaker
 // http://www.slack.net/~ant/
 
@@ -13,6 +11,8 @@ HTTP, the most recently loaded file is kept in memory and a load request
 for the same URL is eliminated. This allows a web page to switch between
 several tracks in a ZIP archive or of a multi-track music file, without
 having to keep track of whether the file was already loaded. */
+
+package com.eliotlash.gme_p5;
 
 import javax.sound.sampled.*;
 import java.io.*;
@@ -32,6 +32,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 class EmuPlayer implements Runnable
 {
     private Mixer   outputMixer;
+    protected PApplet app;
 	// Number of tracks
 	public int getTrackCount() { return emu.trackCount(); }
 	
@@ -46,6 +47,16 @@ class EmuPlayer implements Runnable
 		emu.setFade( time, 6 );
 		play();
 	}
+
+    void startTrack(int track) throws Exception
+    {
+		pause();
+		if ( line != null )
+			line.flush();
+		emu.startTrack( track );
+		//emu.setFade( time, 6 );
+		play();
+    }
 	
 	// Currently playing track
 	public int getCurrentTrack() { return emu.currentTrack(); }
@@ -139,7 +150,7 @@ class EmuPlayer implements Runnable
 
 	void error(String s)
 	{
-		PApplet.println("==== GME_P5 EmuPlayer Error ====");
+		PApplet.println("==== GameMusicEmu EmuPlayer Error ====");
 		String[] lines = s.split("\n");
 		for(int i = 0; i < lines.length; i++)
 		{
@@ -152,7 +163,7 @@ class EmuPlayer implements Runnable
 	{
 		if ( true/*debug*/ )
 		{
-			PApplet.println("==== GME_P5 EmuPlayer Debug ====");
+			PApplet.println("==== GameMusicEmu EmuPlayer Debug ====");
 			String[] lines = s.split("\n");
 			for(int i = 0; i < lines.length; i++)
 			{
@@ -254,7 +265,11 @@ class VGMPlayer extends EmuPlayer
 {
 	int sampleRate;
 	
-	public VGMPlayer( int sampleRate ) { this.sampleRate = sampleRate; }
+	public VGMPlayer( int sampleRate, PApplet app )
+    {
+            this.sampleRate = sampleRate;
+            this.app = app;
+    }
 	
 	// Stops playback and loads file from given URL (HTTP only).
 	// If it's an archive (.zip) then path specifies the file within
@@ -384,10 +399,13 @@ class VGMPlayer extends EmuPlayer
 		return DataReader.loadData( in );
 	}
 
-	// Loads given URL and file within archive, and caches archive for future access
-	byte [] readFileFromPath( String path ) throws Exception
+	// Loads given file from path on disk
+	byte [] readFileFromPath( String filename ) throws Exception
 	{
-		InputStream in = DataReader.openFile(path);
+		InputStream in = app.createInput(filename);
+        if (in == null) {
+                return null;
+        }
 		return DataReader.loadData( in );
 	}
 }

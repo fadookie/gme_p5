@@ -1,4 +1,5 @@
 /*
+ *  Copyright (c) 2012 by Eliot Lash
  *  Copyright (c) 2007 - 2008 by Damien Di Fede <ddf@compartmental.net>
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -41,9 +42,11 @@ import javax.sound.sampled.*;
  * from the sketch's data directory. For this reason, you must pass a PApplet to the 
  * constructor. 
  * 
+ * @author Eliot Lash
+ * @author Shay Green
  * @author Damien Di Fede
  */
-public class GME_P5 {
+public class GameMusicEmu {
 
         //Example consts:
         /** Specifies that you want a MONO AudioInput or AudioOutput */
@@ -51,11 +54,10 @@ public class GME_P5 {
         /** Specifies that you want a STEREO AudioInput or AudioOutput */
         //public static final int STEREO = 2;
         //public static final int LOOP_CONTINUOUSLY = -1;
-        private static boolean DEBUG = true;
+        private static boolean DEBUG = false;
         private PApplet app;
-        VGMPlayer player;
-        boolean backgroundPlayback;
-        Mixer.Info[] mixerInfo;
+        public VGMPlayer player;
+        public Mixer.Info[] mixerInfo;
 
         /**
          * Creates an instance of Minim that will use the Javasound implementation.
@@ -63,16 +65,14 @@ public class GME_P5 {
          * @param parent
          *              the PApplet that will be used for loading files
          */
-        public GME_P5(PApplet parent) {
+        public GameMusicEmu(PApplet parent) {
                 app = parent;
 
                 try {
                         // Setup player and sample rate
                         int sampleRate = 44100;
-                        player = new VGMPlayer(sampleRate);
+                        player = new VGMPlayer(sampleRate, app);
                         player.setVolume(1.0);
-
-                        backgroundPlayback = false;
 
                 } catch (Exception e) {
                         error(getException(e));
@@ -80,14 +80,12 @@ public class GME_P5 {
                 mixerInfo = AudioSystem.getMixerInfo();
         }
 
-        public void helloWorld() {
-                debug("Hello, world!");
-        }
-
-        // Plays file at given URL (HTTP only). If it's an archive (.zip)
-        // then path specifies the file within the archive. Track ranges
-        // from 1 to number of tracks in file.
-        public void playFile(String path) {
+        /**
+         * Plays file at given path.
+         * @param path 
+         * @param time Length of time to play music before fading out
+         */
+        public void playFile(String path, int time) {
                 try {
                         player.loadFileFromPath(path);
                         player.startTrack(0, 90);
@@ -96,7 +94,18 @@ public class GME_P5 {
                 }
         }
 
-        // Stops currently playing file, if any
+        public void playFile(String path) {
+                try {
+                        player.loadFileFromPath(path);
+                        player.startTrack(0);
+                } catch (Exception e) {
+                        error(getException(e));
+                }
+        }
+
+        /**
+         * Stops currently playing file, if any
+         */
         public void stopFile() {
                 try {
                         player.stop();
@@ -114,7 +123,7 @@ public class GME_P5 {
          *          the error message to report
          */
         public static void error(String s) {
-                PApplet.println("=== GME_P5 Error ===");
+                PApplet.println("=== GameMusicEmu Error ===");
                 PApplet.println("=== " + s);
                 PApplet.println();
         }
@@ -138,7 +147,7 @@ public class GME_P5 {
         public static void debug(String s) {
                 if (DEBUG) {
                         String[] lines = s.split("\n");
-                        PApplet.println("=== GME_P5 Debug ===");
+                        PApplet.println("=== GameMusicEmu Debug ===");
                         for (int i = 0; i < lines.length; i++) {
                                 PApplet.println("=== " + lines[i]);
                         }
@@ -162,12 +171,10 @@ public class GME_P5 {
         }
 
         /**
-         * Stops Minim.
+         * Stops GameMusicEmu.
          * 
          * A call to this method should be placed inside of the stop() function of
-         * your sketch. We expect that implemenations of the Minim 
-         * interface made need to do some cleanup, so this is how we 
-         * tell them it's time. 
+         * your sketch. 
          * 
          */
         public void stop() {
@@ -177,48 +184,4 @@ public class GME_P5 {
                         error(getException(e));
                 }
         }
-        /**
-         * Loads the requested file into an {@link AudioPlayer} 
-         * with a buffer size of 1024 samples.
-         * 
-         * @param filename
-         *          the file or URL you want to load
-         * @return an <code>AudioPlayer</code> with a 1024 sample buffer
-         * 
-         * @see #loadFile(String, int)
-         */
-        /*
-        public void loadFile(String filename)
-        {
-        loadFile(filename, 1024);
-        }
-         * 
-         */
-        /**
-         * Loads the requested file into an {@link AudioPlayer} with 
-         * the request buffer size.
-         * 
-         * @param filename
-         *          the file or URL you want to load
-         * @param bufferSize
-         *          the sample buffer size you want
-         *          
-         * @return an <code>AudioPlayer</code> with a sample buffer of the requested size
-         */
-        /*
-        public void loadFile(String filename, int bufferSize)
-        {
-        AudioRecordingStream rec = mimp.getAudioRecordingStream(filename, bufferSize);
-        if ( rec != null )
-        {
-        return new AudioPlayer(rec);
-        }
-        else
-        {
-        error("Couldn't load the file " + filename);
-        }
-        return null;
-        }  
-         * 
-         */
 }
