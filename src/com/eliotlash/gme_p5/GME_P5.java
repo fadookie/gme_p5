@@ -17,8 +17,11 @@
  */
 package com.eliotlash.gme_p5;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import processing.core.PApplet;
 import java.util.*;
+import javax.sound.sampled.*;
 
 /**
  * The <code>Minim</code> class is how you get what you want from JavaSound.
@@ -48,8 +51,7 @@ public class GME_P5 {
         /** Specifies that you want a STEREO AudioInput or AudioOutput */
         //public static final int STEREO = 2;
         //public static final int LOOP_CONTINUOUSLY = -1;
-
-        private static boolean DEBUG = false;
+        private static boolean DEBUG = true;
         private PApplet app;
         VGMPlayer player;
         boolean backgroundPlayback;
@@ -72,12 +74,12 @@ public class GME_P5 {
                         backgroundPlayback = false;
 
                 } catch (Exception e) {
-                        error(e.getStackTrace().toString());
+                        error(getException(e));
                 }
         }
 
         public void helloWorld() {
-                error("Hello, world!");
+                debug("Hello, world!");
         }
 
         // Plays file at given URL (HTTP only). If it's an archive (.zip)
@@ -88,7 +90,7 @@ public class GME_P5 {
                         player.loadFileFromPath(path);
                         player.play();
                 } catch (Exception e) {
-                        error(e.getStackTrace().toString());
+                        error(getException(e));
                 }
         }
 
@@ -97,7 +99,7 @@ public class GME_P5 {
                 try {
                         player.stop();
                 } catch (Exception e) {
-                        error(e.getStackTrace().toString());
+                        error(getException(e));
                 }
         }
 
@@ -113,6 +115,12 @@ public class GME_P5 {
                 PApplet.println("=== GME_P5 Error ===");
                 PApplet.println("=== " + s);
                 PApplet.println();
+        }
+
+        public static String getException(Exception e) {
+                StringWriter w = new StringWriter();
+                e.printStackTrace(new PrintWriter(w));
+                return e.toString() + ": " + w.toString();
         }
 
         /**
@@ -164,7 +172,7 @@ public class GME_P5 {
                 try {
                         stopFile();
                 } catch (Exception e) {
-                        error(e.getStackTrace().toString());
+                        error(getException(e));
                 }
         }
         /**
@@ -180,38 +188,35 @@ public class GME_P5 {
         /*
         public void loadFile(String filename)
         {
-            loadFile(filename, 1024);
+        loadFile(filename, 1024);
         }
          * 
          */
-
-    /**
-    * Loads the requested file into an {@link AudioPlayer} with 
-    * the request buffer size.
-    * 
-    * @param filename
-    *          the file or URL you want to load
-    * @param bufferSize
-    *          the sample buffer size you want
-    *          
-    * @return an <code>AudioPlayer</code> with a sample buffer of the requested size
-    */
+        /**
+         * Loads the requested file into an {@link AudioPlayer} with 
+         * the request buffer size.
+         * 
+         * @param filename
+         *          the file or URL you want to load
+         * @param bufferSize
+         *          the sample buffer size you want
+         *          
+         * @return an <code>AudioPlayer</code> with a sample buffer of the requested size
+         */
         /*
-   public void loadFile(String filename, int bufferSize)
-   {
-     AudioRecordingStream rec = mimp.getAudioRecordingStream(filename, bufferSize);
-     if ( rec != null )
-     {
-       return new AudioPlayer(rec);
-     }
-     else
-     {
-       error("Couldn't load the file " + filename);
-     }
-     return null;
-   }  
+        public void loadFile(String filename, int bufferSize)
+        {
+        AudioRecordingStream rec = mimp.getAudioRecordingStream(filename, bufferSize);
+        if ( rec != null )
+        {
+        return new AudioPlayer(rec);
+        }
+        else
+        {
+        error("Couldn't load the file " + filename);
+        }
+        return null;
+        }  
          * 
          */
- 
-
 }

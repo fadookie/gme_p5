@@ -16,6 +16,7 @@ having to keep track of whether the file was already loaded. */
 
 import javax.sound.sampled.*;
 import java.io.*;
+import processing.core.PApplet;
 
 /* Copyright (C) 2007-2008 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
@@ -30,6 +31,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 
 class EmuPlayer implements Runnable
 {
+    private Mixer   outputMixer;
 	// Number of tracks
 	public int getTrackCount() { return emu.trackCount(); }
 	
@@ -95,7 +97,69 @@ class EmuPlayer implements Runnable
 		playing_ = true;
 		thread.start();
 	}
+
+	SourceDataLine getSourceDataLine(AudioFormat format, int bufferSize)
+	{
+		SourceDataLine line = null;
+		DataLine.Info info = lineInfo;//new DataLine.Info(SourceDataLine.class, format);
+		if ( AudioSystem.isLineSupported(info) ) 
+		{
+			try
+			{
+        if ( outputMixer == null )
+        {
+          line = (SourceDataLine)AudioSystem.getLine(info);
+        }
+        else
+        {
+          line = (SourceDataLine)outputMixer.getLine(info);
+        }
+				// remember that time you spent, like, an entire afternoon fussing
+				// with this buffer size to try to get the latency decent on Linux?
+				// Yah, don't fuss with this anymore, ok?
+				line.open(format, bufferSize * format.getFrameSize() * 4);
+				if ( line.isOpen() )
+				{
+					debug("SourceDataLine is " + line.getClass().toString() + "\n"
+					      + "Buffer size is " + line.getBufferSize() + " bytes.\n" 
+					      + "Format is "	+ line.getFormat().toString() + ".");
+					return line;
+				}
+			}
+			catch (LineUnavailableException e)
+			{
+				error("Couldn't open the line: " + e.getMessage());
+			}
+		}
+		error("Unable to return a SourceDataLine: unsupported format - " + format.toString());
+		return line;
+	}
+
+	void error(String s)
+	{
+		PApplet.println("==== GME_P5 EmuPlayer Error ====");
+		String[] lines = s.split("\n");
+		for(int i = 0; i < lines.length; i++)
+		{
+			PApplet.println("==== " + lines[i]);
+		}
+		PApplet.println();
+	}
 	
+    void debug(String s)
+	{
+		if ( true/*debug*/ )
+		{
+			PApplet.println("==== GME_P5 EmuPlayer Debug ====");
+			String[] lines = s.split("\n");
+			for(int i = 0; i < lines.length; i++)
+			{
+				PApplet.println("==== " + lines[i]);
+			}
+			PApplet.println();
+		}
+	}
+
 	// Stops playback and closes audio
 	public void stop() throws Exception
 	{
