@@ -89,8 +89,8 @@ class EmuPlayer implements Runnable
 	{
 		if ( line == null )
 		{
-			line = (SourceDataLine) AudioSystem.getLine( lineInfo );
-			line.open( audioFormat );
+			line = getSourceDataLine(audioFormat, 8192/*1024*/);//(SourceDataLine) AudioSystem.getLine( lineInfo );
+			//line.open( audioFormat );
 			setVolume( volume_ );
 		}
 		thread = new Thread( this );
@@ -101,18 +101,20 @@ class EmuPlayer implements Runnable
 	SourceDataLine getSourceDataLine(AudioFormat format, int bufferSize)
 	{
 		SourceDataLine line = null;
-		DataLine.Info info = lineInfo;//new DataLine.Info(SourceDataLine.class, format);
-		if ( AudioSystem.isLineSupported(info) ) 
+        if (lineInfo == null) {
+            lineInfo = new DataLine.Info(SourceDataLine.class, format);
+        }
+		if ( AudioSystem.isLineSupported(lineInfo) ) 
 		{
 			try
 			{
         if ( outputMixer == null )
         {
-          line = (SourceDataLine)AudioSystem.getLine(info);
+          line = (SourceDataLine)AudioSystem.getLine(lineInfo);
         }
         else
         {
-          line = (SourceDataLine)outputMixer.getLine(info);
+          line = (SourceDataLine)outputMixer.getLine(lineInfo);
         }
 				// remember that time you spent, like, an entire afternoon fussing
 				// with this buffer size to try to get the latency decent on Linux?
@@ -206,15 +208,45 @@ class EmuPlayer implements Runnable
 		
 		// play track until stop signal
 		byte [] buf = new byte [8192];
+        int bytesWritten = 0;
 		while ( playing_ && !emu.trackEnded() )
 		{
 			int count = emu.play( buf, buf.length / 2 );
-			line.write( buf, 0, count * 2 );
+            boolean shouldRead = false;
+            while (!shouldRead) {
+                    // the write call will block until the requested amount of bytes
+                    // is written, however the user might stop the line in the
+                    // middle of writing and then we get told how much was actually written.
+                    // because of that, we might not need to write the entire array when we get here.
+                    int needToWrite = count * 2 - bytesWritten;
+                    int actualWrit = line.write(buf, bytesWritten, needToWrite);
+                    //line.write( buf, 0, count * 2 );
+
+                    // if the total written is not equal to how much we needed to write
+                    // then we need to remember where we were so that we don't read more 
+                    // until we finished writing our entire rawBytes array.
+                    if ( actualWrit != needToWrite )
+                    {
+                      shouldRead = false;
+                      bytesWritten += actualWrit;
+                    }
+                    else
+                    {
+                      // if it all got written, we should continue reading
+                      // and we reset our bytesWritten value.
+                      shouldRead = true; 
+                      bytesWritten = 0;
+                    }
+            }
 			idle();
 		}
 		
 		playing_ = false;
 		line.stop();
+	}
+
+	private void writeBytes()
+	{
 	}
 }
 
