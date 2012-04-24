@@ -55,6 +55,7 @@ public class GME_P5 {
         private PApplet app;
         VGMPlayer player;
         boolean backgroundPlayback;
+        Mixer.Info[] mixerInfo;
 
         /**
          * Creates an instance of Minim that will use the Javasound implementation.
@@ -76,6 +77,7 @@ public class GME_P5 {
                 } catch (Exception e) {
                         error(getException(e));
                 }
+                mixerInfo = AudioSystem.getMixerInfo();
         }
 
         public void helloWorld() {
