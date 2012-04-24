@@ -90,7 +90,7 @@ public class GME_P5 {
         public void playFile(String path) {
                 try {
                         player.loadFileFromPath(path);
-                        player.play();
+                        player.startTrack(0, 90);
                 } catch (Exception e) {
                         error(getException(e));
                 }
